@@ -507,3 +507,26 @@ function generateId(): string {
     Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
   );
 }
+
+/**
+ * Resetea el progreso de una unidad.
+ *
+ * - Borra los `itemStates` de los ítems de la unidad.
+ * - Resetea el `unitProgress` de esa unidad.
+ * - Mantiene los `attempts` (historial de respuestas) para análisis
+ *   histórico.
+ */
+export function resetUnitProgress(
+  unitId: number,
+  itemIds: string[],
+): void {
+  const state = loadState();
+
+  for (const id of itemIds) {
+    delete state.itemStates[id];
+  }
+  delete state.unitProgress[unitId];
+
+  saveState(state);
+}
+

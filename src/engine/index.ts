@@ -40,4 +40,5 @@ export {
   exportAsJson,
   exportAsTxt,
   importReinforcement,
+  resetUnitProgress,
 } from "./history";

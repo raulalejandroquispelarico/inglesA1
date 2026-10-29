@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Página /piloto-mixto — Valida los 7 tipos de PracticeItem.
+ * Página /piloto-mixto — Valida los 8 tipos de PracticeItem.
  * ==========================================================
  */
 
@@ -21,7 +21,7 @@ export default function PilotoMixtoPage() {
           <ArrowLeft className="size-4" />
           Volver al inicio
         </Link>
-        <h1 className="text-2xl font-bold">🧪 Piloto mixto — 7 tipos</h1>
+        <h1 className="text-2xl font-bold">🧪 Piloto mixto — 8 tipos</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Prueba interna: un ítem de cada tipo de ejercicio.
         </p>

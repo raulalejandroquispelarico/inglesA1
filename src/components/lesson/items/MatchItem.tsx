@@ -73,7 +73,6 @@ export function MatchItem({
   const matches = useMemo(() => parseAnswer(userAnswer), [userAnswer]);
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   // Barajar la columna derecha una sola vez por ítem (useMemo con dep [item.id]).
   const rightOptions = useMemo(
     () => shuffle(item.pairs.map((p) => p.right)),

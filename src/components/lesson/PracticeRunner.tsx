@@ -4,8 +4,7 @@
  * Orquestador de una sesión de práctica.
  * =======================================
  *
- * v4a: ahora despacha a los 7 componentes de ítem por kind.
- * v4a-fix: añadido key={item.id} para forzar re-montaje.
+ * v4b1a: fix de key en spread, manejo de cola vacía, renombrar botón.
  */
 
 import { usePracticeSession } from "@/hooks/use-practice-session";
@@ -21,7 +20,7 @@ import type { Unit } from "@/shared/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw, AlertTriangle } from "lucide-react";
 
 interface PracticeRunnerProps {
   unit: Unit;
@@ -29,6 +28,31 @@ interface PracticeRunnerProps {
 
 export function PracticeRunner({ unit }: PracticeRunnerProps) {
   const session = usePracticeSession({ unit, mode: "full" });
+
+  // Cola vacía (todos los ítems dominados o estado inconsistente).
+  if (session.isEmpty) {
+    return (
+      <Card>
+        <CardContent className="pt-6 space-y-4 text-center">
+          <AlertTriangle className="size-12 mx-auto text-amber-500" />
+          <h2 className="text-xl font-semibold">No hay ítems pendientes</h2>
+          <p className="text-sm text-muted-foreground">
+            Todos los ítems de esta unidad ya están dominados o no hay
+            ítems disponibles.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Puedes reiniciar el progreso para practicar desde cero.
+          </p>
+          <div className="flex gap-2 justify-center pt-2">
+            <Button onClick={session.resetProgress}>
+              <RotateCcw className="size-4 mr-1.5" />
+              Reiniciar progreso
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (session.total === 0 && !session.finished) {
     return (
@@ -57,7 +81,7 @@ export function PracticeRunner({ unit }: PracticeRunnerProps) {
           <div className="flex gap-2 justify-center pt-2">
             <Button onClick={session.restart}>
               <RotateCcw className="size-4 mr-1.5" />
-              Repetir solo falladas
+              Repetir sesión
             </Button>
           </div>
         </CardContent>
@@ -74,7 +98,6 @@ export function PracticeRunner({ unit }: PracticeRunnerProps) {
       : 0;
 
   const commonProps = {
-    key: item.id,
     index: session.index,
     total: session.total,
     userAnswer: session.answer,
@@ -101,26 +124,28 @@ export function PracticeRunner({ unit }: PracticeRunnerProps) {
       </div>
 
       {item.kind === "translation" && (
-        <TranslationItem item={item} {...commonProps} />
+        <TranslationItem key={item.id} item={item} {...commonProps} />
       )}
-      {item.kind === "match" && <MatchItem item={item} {...commonProps} />}
+      {item.kind === "match" && (
+        <MatchItem key={item.id} item={item} {...commonProps} />
+      )}
       {item.kind === "multiple-choice" && (
-        <MultipleChoiceItem item={item} {...commonProps} />
+        <MultipleChoiceItem key={item.id} item={item} {...commonProps} />
       )}
       {item.kind === "fill-blank" && (
-        <FillBlankItem item={item} {...commonProps} />
+        <FillBlankItem key={item.id} item={item} {...commonProps} />
       )}
       {item.kind === "word-order" && (
-        <WordOrderItem item={item} {...commonProps} />
+        <WordOrderItem key={item.id} item={item} {...commonProps} />
       )}
       {item.kind === "listening" && (
-        <ListeningItem item={item} {...commonProps} />
+        <ListeningItem key={item.id} item={item} {...commonProps} />
       )}
       {item.kind === "writing" && (
-        <WritingItem item={item} {...commonProps} />
+        <WritingItem key={item.id} item={item} {...commonProps} />
       )}
       {item.kind === "reading" && (
-        <ReadingItem item={item} {...commonProps} />
+        <ReadingItem key={item.id} item={item} {...commonProps} />
       )}
     </div>
   );

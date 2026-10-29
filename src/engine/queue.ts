@@ -6,9 +6,14 @@
  * en función del modo y del estado del alumno.
  *
  * Función pura: no lee de localStorage, no persiste nada.
- * Recibe `PersistedState` completo y devuelve la cola.
  *
- * Referencia: ARQUITECTURA.md §2.4
+ * Semántica de modos (v2, cambia en Tanda 4-B-1-A):
+ *   - "full":   todos los ítems NO dominados (new + learning + review).
+ *               Review incluye VENCIDOS Y NO VENCIDOS. El spacing solo
+ *               prioriza, no bloquea al alumno que quiere practicar hoy.
+ *   - "review": solo learning + review VENCIDOS. Es el modo estricto
+ *               de repaso programado.
+ *   - "free":   todo, incluidos mastered. Para repaso libre.
  */
 
 import type {
@@ -19,26 +24,11 @@ import type {
   SessionMode,
 } from "@/shared/types";
 
-/**
- * Un elemento de la cola: el ítem a presentar + su estado actual
- * (o null si es `new` y no tiene estado persistido aún).
- */
 export interface QueueItem {
   item: PracticeItem;
   state: ItemState | null;
 }
 
-/**
- * Construye la cola de práctica de una unidad.
- *
- * Orden:
- *   - mode "full":   new → learning → review vencidos
- *   - mode "review": learning → review vencidos
- *   - mode "free":   todo (new + learning + review + mastered)
- *
- * Un ítem "vence" si `nextReview <= now`. Los ítems sin estado se
- * tratan como `new`.
- */
 export function buildQueue(
   unit: Unit,
   mode: SessionMode,
@@ -61,31 +51,40 @@ export function buildQueue(
     } else if (itemState.status === "learning") {
       learningItems.push({ item, state: itemState });
     } else if (itemState.status === "review") {
-      if (itemState.nextReview === null) {
-        // Estado inconsistente: tratar como learning.
-        learningItems.push({ item, state: itemState });
-      } else if (new Date(itemState.nextReview).getTime() <= nowMs) {
-        reviewItems.push({ item, state: itemState });
-      }
-      // Si no está vencido, no se incluye.
+      // En "full" se incluyen siempre; en "review" solo si vencidos.
+      // Lo decidimos al construir la cola final según el modo.
+      reviewItems.push({ item, state: itemState });
     } else if (itemState.status === "mastered") {
       masteredItems.push({ item, state: itemState });
     }
   }
 
+  // Filtrar reviewItems según el modo.
+  const reviewDue = reviewItems.filter(({ state: s }) => {
+    if (!s || s.nextReview === null) return true; // inconsistente → incluir
+    return new Date(s.nextReview).getTime() <= nowMs;
+  });
+
   switch (mode) {
     case "full":
+      // Todos los no dominados, sin importar nextReview.
       return [...newItems, ...learningItems, ...reviewItems];
     case "review":
-      return [...learningItems, ...reviewItems];
+      // Solo learning + review vencidos.
+      return [...learningItems, ...reviewDue];
     case "free":
-      return [...newItems, ...learningItems, ...reviewItems, ...masteredItems];
+      // Todo.
+      return [
+        ...newItems,
+        ...learningItems,
+        ...reviewItems,
+        ...masteredItems,
+      ];
   }
 }
 
 /**
  * Cuenta cuántos ítems tiene pendientes una unidad, por categoría.
- * Útil para el Home ("5 ítems pendientes de repaso").
  */
 export function countPendingByUnit(
   unit: Unit,
@@ -95,28 +94,39 @@ export function countPendingByUnit(
   new: number;
   learning: number;
   reviewDue: number;
+  reviewNotDue: number;
   mastered: number;
   total: number;
 } {
-  const queue = buildQueue(unit, "free", state, now);
-
+  const nowMs = now.getTime();
   let newCount = 0;
   let learningCount = 0;
   let reviewDueCount = 0;
+  let reviewNotDueCount = 0;
   let masteredCount = 0;
 
-  for (const { state: itemState } of queue) {
-    if (itemState === null || itemState.status === "new") newCount++;
-    else if (itemState.status === "learning") learningCount++;
-    else if (itemState.status === "review") reviewDueCount++;
-    else if (itemState.status === "mastered") masteredCount++;
+  for (const item of unit.practice) {
+    const s = state.itemStates[item.id];
+    if (!s || s.status === "new") newCount++;
+    else if (s.status === "learning") learningCount++;
+    else if (s.status === "review") {
+      if (s.nextReview === null) reviewDueCount++;
+      else if (new Date(s.nextReview).getTime() <= nowMs) reviewDueCount++;
+      else reviewNotDueCount++;
+    } else if (s.status === "mastered") masteredCount++;
   }
 
   return {
     new: newCount,
     learning: learningCount,
     reviewDue: reviewDueCount,
+    reviewNotDue: reviewNotDueCount,
     mastered: masteredCount,
-    total: queue.length,
+    total:
+      newCount +
+      learningCount +
+      reviewDueCount +
+      reviewNotDueCount +
+      masteredCount,
   };
 }

@@ -22,6 +22,7 @@ import {
   loadState,
   recordAttempt,
   saveState,
+  resetUnitProgress,
 } from "@/engine";
 import type { EvaluationResult, QueueItem } from "@/engine";
 import type { PersistedState, SessionMode, Unit } from "@/shared/types";
@@ -56,6 +57,10 @@ interface UsePracticeSessionResult {
   sessionIncorrect: number;
   /** Reiniciar la sesión desde cero. */
   restart: () => void;
+  /** True si la cola está vacía después de cargar. */
+  isEmpty: boolean;
+  /** Resetea el progreso de esta unidad (borra itemStates). */
+  resetProgress: () => void;
 }
 
 export function usePracticeSession({
@@ -128,6 +133,28 @@ export function usePracticeSession({
     setFinished(false);
   }, [unit, mode]);
 
+  const isEmpty = useMemo(
+    () => queue.length === 0 && !finished,
+    [queue.length, finished],
+  );
+
+  const resetProgress = useCallback(() => {
+    resetUnitProgress(
+      unit.id,
+      unit.practice.map((item) => item.id),
+    );
+    // Después de borrar, reconstruir la cola (todo será new).
+    const freshState = loadState();
+    setState(freshState);
+    setQueue(buildQueue(unit, mode, freshState));
+    setIndex(0);
+    setAnswer("");
+    setResult(null);
+    setSessionCorrect(0);
+    setSessionIncorrect(0);
+    setFinished(false);
+  }, [unit, mode]);
+
   return {
     currentItem,
     index,
@@ -141,5 +168,7 @@ export function usePracticeSession({
     sessionCorrect,
     sessionIncorrect,
     restart,
+    isEmpty,
+    resetProgress,
   };
 }
