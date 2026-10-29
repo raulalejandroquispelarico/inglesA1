@@ -8,6 +8,7 @@ import type {
   ListeningItem,
   WritingItem,
   TranslationItem,
+  ReadingItem,
 } from "@/shared/types";
 
 // =============================================================================
@@ -342,5 +343,46 @@ describe("evaluate() — lastIndex en RegExp globales", () => {
     expect(r1.errorTag).toBe("test");
     const r2 = evaluate(item, "want");
     expect(r2.errorTag).toBe("test");
+  });
+});
+
+// =============================================================================
+// evaluate() — Reading (NUEVO en Tanda 4-B-0)
+// =============================================================================
+
+const readingItem: ReadingItem = {
+  ...baseItem,
+  id: "rd-001",
+  kind: "reading",
+  skill: "reading",
+  sourceText:
+    "Ana is from Bolivia. She is a teacher. She has two brothers and one sister.",
+  question: "Where is Ana from?",
+  choices: ["Bolivia", "Peru", "Spain"],
+  expected: ["Bolivia"],
+};
+
+describe("evaluate() — reading", () => {
+  it("acepta la opción correcta", () => {
+    const r = evaluate(readingItem, "Bolivia");
+    expect(r.correct).toBe(true);
+    expect(r.matchedExpected).toBe("Bolivia");
+  });
+
+  it("rechaza opción incorrecta", () => {
+    const r = evaluate(readingItem, "Peru");
+    expect(r.correct).toBe(false);
+    expect(r.errorTag).toBe("unclassified");
+  });
+
+  it("respeta mayúsculas/minúsculas (normaliza)", () => {
+    const r = evaluate(readingItem, "bolivia");
+    expect(r.correct).toBe(true);
+  });
+
+  it("expone expectedNormalized y normalizedAnswer", () => {
+    const r = evaluate(readingItem, "Peru");
+    expect(r.expectedNormalized).toEqual(["bolivia"]);
+    expect(r.normalizedAnswer).toBe("peru");
   });
 });

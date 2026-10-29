@@ -149,6 +149,23 @@ export const UNIT_00_MIXTO: Unit = {
       ],
       errorRules: [],
     },
+
+    // 8. reading (NUEVO en Tanda 4-B-0)
+    {
+      id: "mix-008",
+      kind: "reading",
+      skill: "reading",
+      cefr: "A1",
+      difficulty: 2,
+      tags: ["reading-basic"],
+      prompt: "Lee el texto y responde la pregunta.",
+      sourceText:
+        "Ana is from Bolivia. She is a teacher. She has two brothers and one sister.",
+      question: "Where is Ana from?",
+      choices: ["Bolivia", "Peru", "Spain"],
+      expected: ["Bolivia"],
+      errorRules: [],
+    },
   ],
   evaluation: [],
 };

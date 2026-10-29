@@ -16,6 +16,7 @@ import { FillBlankItem } from "./items/FillBlankItem";
 import { WordOrderItem } from "./items/WordOrderItem";
 import { ListeningItem } from "./items/ListeningItem";
 import { WritingItem } from "./items/WritingItem";
+import { ReadingItem } from "./items/ReadingItem";
 import type { Unit } from "@/shared/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,9 @@ export function PracticeRunner({ unit }: PracticeRunnerProps) {
       )}
       {item.kind === "writing" && (
         <WritingItem item={item} {...commonProps} />
+      )}
+      {item.kind === "reading" && (
+        <ReadingItem item={item} {...commonProps} />
       )}
     </div>
   );

@@ -139,6 +139,22 @@ export interface TranslationItem extends PracticeItemBase {
   acceptableAnswers?: string[];
 }
 
+/**
+ * Comprensión lectora. El alumno lee un texto corto y responde
+ * una pregunta de comprensión eligiendo una opción.
+ */
+export interface ReadingItem extends PracticeItemBase {
+  kind: "reading";
+  /** Texto a leer. Puede ser 1-3 frases para A1. */
+  sourceText: string;
+  /** Pregunta de comprensión sobre el texto. */
+  question: string;
+  /** Opciones de respuesta. */
+  choices: string[];
+  /** Respuesta(s) correcta(s). */
+  expected: string[];
+}
+
 export type PracticeItem =
   | MatchItem
   | MultipleChoiceItem
@@ -146,7 +162,8 @@ export type PracticeItem =
   | WordOrderItem
   | ListeningItem
   | WritingItem
-  | TranslationItem;
+  | TranslationItem
+  | ReadingItem;
 
 export type PracticeItemKind = PracticeItem["kind"];
 
@@ -300,7 +317,7 @@ export interface ExportPayload {
 // 8. METADATOS DEL CONTRATO
 // =============================================================================
 
-export const CONTRACT_VERSION = "1.0.0" as const;
+export const CONTRACT_VERSION = "1.1.0" as const;
 export const SCHEMA_VERSION = 1 as const;
 export const EVALUATION_PASS_THRESHOLD = 70 as const;
 export const MASTERY_STREAK = 3 as const;

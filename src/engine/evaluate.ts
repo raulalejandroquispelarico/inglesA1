@@ -92,6 +92,8 @@ export function evaluate(
       return evaluateWriting(item, userAnswer);
     case "translation":
       return evaluateTranslation(item, userAnswer);
+    case "reading":
+      return evaluateReading(item, userAnswer);
   }
 }
 
@@ -408,6 +410,48 @@ function evaluateTranslation(
     item.expected,
     item.acceptableAnswers,
   );
+
+  if (matched !== null) {
+    return {
+      correct: true,
+      matchedExpected: matched,
+      errorTag: null,
+      diagnosis: null,
+      rule: null,
+      example: null,
+      similarity: 1,
+      expectedNormalized,
+      normalizedAnswer,
+    };
+  }
+
+  const diagnosisResult = runErrorRules(item.errorRules, userAnswer);
+
+  return {
+    correct: false,
+    matchedExpected: null,
+    errorTag: diagnosisResult?.tag ?? "unclassified",
+    diagnosis: diagnosisResult?.diagnosis ?? null,
+    rule: diagnosisResult?.rule ?? null,
+    example: diagnosisResult?.example ?? null,
+    similarity: similarity(userAnswer, item.expected[0] ?? ""),
+    expectedNormalized,
+    normalizedAnswer,
+  };
+}
+
+
+/**
+ * Evaluación de comprensión lectora.
+ * Igual que listening pero sin audio: el alumno lee el texto y elige.
+ */
+function evaluateReading(
+  item: Extract<PracticeItem, { kind: "reading" }>,
+  userAnswer: string,
+): EvaluationResult {
+  const normalizedAnswer = normalize(userAnswer);
+  const expectedNormalized = item.expected.map(normalize);
+  const matched = findMatch(userAnswer, item.expected);
 
   if (matched !== null) {
     return {
